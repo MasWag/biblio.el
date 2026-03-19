@@ -29,11 +29,26 @@
 ;;; Code:
 
 (require 'biblio-core)
+(require 'cl-lib)
+
+(defcustom biblio-dblp-format 'crossref
+  "Format of the BibTeX entries returned by DBLP."
+  :group 'biblio-dblp
+  :type '(choice
+          (const :tag "Crossref" crossref)
+          (const :tag "Standard" standard)
+          (const :tag "Condensed" condensed)))
 
 (defun biblio-dblp--forward-bibtex (metadata forward-to)
   "Forward BibTeX for DBLP entry METADATA to FORWARD-TO."
   (let* ((source-url (biblio-alist-get 'url metadata))
-         (url (replace-regexp-in-string "/rec/" "/rec/bib2/" source-url t t)))
+         (url (replace-regexp-in-string "/rec/"
+                                        (cl-case biblio-dblp-format
+                                          (condensed "/rec/bib0/")
+                                          (standard "/rec/bib1/")
+                                          (crossref "/rec/bib2/")
+                                          (t "/rec/bib2/"))
+                                        source-url t t)))
     (biblio-url-retrieve url (biblio-generic-url-callback
                               (lambda () ;; No allowed errors, so no arguments
                                 "Parse DBLP BibTeX results."
